@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -O2 -g -std=c99 -Wall -I include
+CFLAGS = -O2 -g -Wall -I include
 
 OBJS = src/main.o \
 		src/utility.o
