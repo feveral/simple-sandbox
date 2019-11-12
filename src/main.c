@@ -16,10 +16,10 @@ int main(int argc, char *argv[])
     while ((opt = getopt(argc, argv, ":dp")) != -1) {
         if (opt == 'd') {
             basePath = argv[optind];
-            flag = 1;
+            flag += 1;
         } else if (opt == 'p') {
             sandboxLibPath = argv[optind];
-            flag = 1;
+            flag += 1;
         } else {
             printf("./sandbox: invalid option -- '%c'\n", argv[optind-1][1]);
             printString("usage: ./sandbox [-p sopath] [-d basedir] [--] cmd [cmd args ...]");

@@ -55,6 +55,33 @@ int getstdout()
     return stdoutfd;
 }
 
+int checkPathCreate(const char *pathname, char *command)
+{
+    static int isReplaceOutput = 0;
+    static int stdoutfd;
+    if (!isReplaceOutput) stdoutfd = getstdout();
+    
+    char *path;
+    if (!isContain(pathname, '/')) path = "./";
+    else path = cutPathTail(pathname);
+
+    char cwd[512];
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        char *abs_parent = realpath(cwd, NULL);
+        char *abs_child  = realpath(path, NULL);
+        if (abs_parent == 0 || abs_child == 0) {
+            dprintf(stdoutfd, "[sandbox] %s: access to %s is not allowed\n", command, pathname); 
+            return 0;
+        }
+        size_t parent_len = strlen(abs_parent);
+        int result = strncmp(abs_parent, abs_child, parent_len) == 0;
+        if (result == 0) {
+            dprintf(stdoutfd, "[sandbox] %s: access to %s is not allowed\n", command, pathname); 
+            return 0;
+        } else return 1;
+    } else return 0;
+}
+
 int checkPath(const char *path, char *command)
 {
     static int isReplaceOutput = 0;
@@ -70,7 +97,6 @@ int checkPath(const char *path, char *command)
             return 0;
         }
         size_t parent_len = strlen(abs_parent);
-        size_t child_len  = strlen(abs_child);
         int result = strncmp(abs_parent, abs_child, parent_len) == 0;
         if (result == 0) {
             dprintf(stdoutfd, "[sandbox] %s: access to %s is not allowed\n", command, path); 
@@ -137,6 +163,17 @@ int chmod(const char *pathname, mode_t mode)
 }
 
 // Haven't test
+int fchmodat(int dirfd, const char *pathname, mode_t mode, int flags)
+{
+    printf("fchmodat is called: %s\n", pathname);
+    if (checkPath(pathname, "fchmodat")) {
+        int (*func)(int dirfd, const char *pathname, mode_t mode, int flags);
+        func = getOriginFunction("fchmodat");
+        return func(dirfd, pathname, mode, flags);
+    } return -1;
+}
+
+// Haven't test
 int chown(const char *pathname, uid_t owner, gid_t group)
 {
     printf("chown is called: %s\n", pathname);
@@ -151,7 +188,7 @@ int chown(const char *pathname, uid_t owner, gid_t group)
 int creat(const char *pathname, mode_t mode)
 {
     printf("creat is called: %s\n", pathname);
-    if (checkPath(pathname, "creat") == 1) {
+    if (checkPathCreate(pathname, "creat") == 1) {
         int (*func)(const char *pathname, mode_t mode);
         func = getOriginFunction("creat");
         return func(pathname , mode);
@@ -184,10 +221,7 @@ int link(const char *oldpath, const char *newpath)
 int mkdir(const char *pathname, mode_t mode)
 {
     printf("mkdir is called: %s\n", pathname);
-    char *path;
-    if (!isContain(pathname, '/')) path = "./";
-    else path = cutPathTail(pathname);
-    if (checkPath(path, "mkdir") == 1) {
+    if (checkPathCreate(pathname, "mkdir") == 1) {
         int (*func)(const char *pathname, mode_t mode);
         func = getOriginFunction("mkdir");
         return func(pathname, mode);
@@ -296,12 +330,29 @@ int rmdir(const char *pathname)
 int __xstat(int ver, const char *path, struct stat *buf)
 {
     printf("__xstat is called: %s\n", path);
-    char *pathbechecked;
-    if (!isContain(path, '/')) pathbechecked = "./";
-    else pathbechecked = cutPathTail(path);
-    if (checkPath(pathbechecked, "__xstat")) {
+    if (checkPath(path, "__xstat")) {
         int (*func)(int ver, const char *path, struct stat *buf);
         func = getOriginFunction("__xstat");
+        return func(ver, path, buf);
+    } return -1;
+}
+
+// int __fxstat(int ver, int fildes, struct stat *buf)
+// {
+//     printf("__fxstat is called\n");
+//     if (1) {
+//         int (*func)(int ver, const char *path, struct stat *buf);
+//         func = getOriginFunction("__fxstat");
+//         return func(ver, fildes, buf);
+//     } return -1;
+// }
+
+int __lxstat(int ver, const char *path, struct stat *buf)
+{
+    printf("__lxstat is called: %s\n", path);
+    if (checkPath(path, "__lxstat")) {
+        int (*func)(int ver, const char *path, struct stat *buf);
+        func = getOriginFunction("__lxstat");
         return func(ver, path, buf);
     } return -1;
 }
@@ -325,5 +376,16 @@ int unlink(const char *pathname)
         int (*func)(const char *pathname);
         func = getOriginFunction("unlink");
         return func(pathname);
+    } return -1;
+}
+
+// Haven't test
+int unlinkat(int dirfd, const char *pathname, int flags)
+{
+    printf("unlinkat is called: %s\n", pathname);
+    if (checkPath(pathname, "unlinkat")) {
+        int (*func)(int dirfd, const char *pathname, int flags);
+        func = getOriginFunction("unlinkat");
+        return func(dirfd, pathname, flags);
     } return -1;
 }
