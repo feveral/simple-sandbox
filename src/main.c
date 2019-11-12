@@ -5,12 +5,8 @@
 #include <getopt.h>
 #include <string.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include "utility.h"
-
-void test() 
-{
-    chdir("./");
-}
 
 int main(int argc, char *argv[])
 {

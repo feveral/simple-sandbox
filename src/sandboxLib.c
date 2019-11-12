@@ -25,7 +25,7 @@ char *cutPathTail(const char *path)
     strncpy(cutpath, path, strlen(path));
     for(int i=strlen(cutpath)-1; i>=0;i--){
         if (cutpath[i] == '/' && i != strlen(cutpath)-1) {
-            cutpath[i] = '\0';
+            cutpath[i+1] = '\0';
             break;
         }
     }
@@ -114,7 +114,7 @@ int system(const char *command)
     printf("[sandbox] system(%s): not allowed\n", command); return -1;
 }
 
-// Haven't replaced
+// Haven't test
 int chdir(const char *path)
 {
     printf("chdir is called: %s\n", path);
@@ -125,7 +125,7 @@ int chdir(const char *path)
     } return -1;
 }
 
-// Haven't replaced
+// Haven't test
 int chmod(const char *pathname, mode_t mode)
 {
     printf("chmod is called: %s\n", pathname);
@@ -136,7 +136,7 @@ int chmod(const char *pathname, mode_t mode)
     } return -1;
 }
 
-// Haven't replaced
+// Haven't test
 int chown(const char *pathname, uid_t owner, gid_t group)
 {
     printf("chown is called: %s\n", pathname);
@@ -147,7 +147,7 @@ int chown(const char *pathname, uid_t owner, gid_t group)
     } return -1;
 }
 
-// Haven't replaced
+// Haven't test
 int creat(const char *pathname, mode_t mode)
 {
     printf("creat is called: %s\n", pathname);
@@ -169,7 +169,7 @@ FILE *fopen(const char *path, const char *mode)
     } return 0;
 }
 
-// Haven't replaced
+// Haven't test
 int link(const char *oldpath, const char *newpath)
 {
     printf("link is called: %s, %s\n", oldpath, newpath);    
@@ -180,11 +180,11 @@ int link(const char *oldpath, const char *newpath)
     } return -1;
 }
 
-// have bug , because pathname not exist before mkdir
+// OK
 int mkdir(const char *pathname, mode_t mode)
 {
     printf("mkdir is called: %s\n", pathname);
-    char *path = "";
+    char *path;
     if (!isContain(pathname, '/')) path = "./";
     else path = cutPathTail(pathname);
     if (checkPath(path, "mkdir") == 1) {
@@ -194,6 +194,7 @@ int mkdir(const char *pathname, mode_t mode)
     } return 0;
 }
 
+// OK
 DIR *opendir(const char *name)
 {
     printf("opendir is called: %s\n", name);
@@ -255,7 +256,7 @@ ssize_t readlink(const char *pathname, char *buf, size_t bufsiz)
     } return -1;
 }
 
-// Haven't replaced
+// Haven't test
 int remove(const char *pathname)
 {
     printf("remove is called: %s\n", pathname);
@@ -266,18 +267,21 @@ int remove(const char *pathname)
     } return -1;
 }
 
-// Haven't replaced
+// OK
 int rename(const char *oldpath, const char *newpath)
 {
     printf("rename is called: %s, %s\n", oldpath, newpath);
-    if (checkPath(oldpath, "rename") && checkPath(newpath, "rename")) {
+    char *newpathbechecked;
+    if (!isContain(newpath, '/')) newpathbechecked = "./";
+    else newpathbechecked = cutPathTail(newpath);
+    if (checkPath(oldpath, "rename") && checkPath(newpathbechecked, "rename")) {
         int (*func)(const char *oldpath, const char *newpath);
         func = getOriginFunction("rename");
         return func(oldpath, newpath);
     } return -1;
 }
 
-// Haven't replaced
+// Haven't test
 int rmdir(const char *pathname)
 {
     printf("rmdir is called: %s\n", pathname);
@@ -288,11 +292,14 @@ int rmdir(const char *pathname)
     } return -1;
 }
 
-// Haven't test
+// OK
 int __xstat(int ver, const char *path, struct stat *buf)
 {
     printf("__xstat is called: %s\n", path);
-    if (checkPath(path, "__xstat")) {
+    char *pathbechecked;
+    if (!isContain(path, '/')) pathbechecked = "./";
+    else pathbechecked = cutPathTail(path);
+    if (checkPath(pathbechecked, "__xstat")) {
         int (*func)(int ver, const char *path, struct stat *buf);
         func = getOriginFunction("__xstat");
         return func(ver, path, buf);
