@@ -12,6 +12,13 @@
 #include <stdarg.h>
 #include <fcntl.h>
 
+int debugoutput;
+__attribute__((constructor)) static void init(void) {
+    int debug = 1;
+    if (debug) debugoutput = getstdout(); 
+    else debugoutput = getdevnull();
+}
+
 int isContain(const char *str, char target)
 {
     for(int i = 0; i < strlen(str); i++)
@@ -45,6 +52,14 @@ void *getOriginFunction(const char *command)
     void *handle = dlopen("libc.so.6", RTLD_LAZY);
     void *func = dlsym(handle, command);
     return func;
+}
+
+int getdevnull()
+{
+    int (*func)(const char *pathname, int flags, ...);
+    func = getOriginFunction("open");
+    int devnull = func("/dev/null", O_WRONLY);
+    return devnull;
 }
 
 int getstdout()
@@ -143,7 +158,7 @@ int system(const char *command)
 // Haven't test
 int chdir(const char *path)
 {
-    printf("chdir is called: %s\n", path);
+    dprintf(debugoutput, "chdir is called: %s\n", path);
     if (checkPath(path, "chdir") == 1) {
         int (*func)(const char *path);
         func = getOriginFunction("chdir");
@@ -154,7 +169,7 @@ int chdir(const char *path)
 // Haven't test
 int chmod(const char *pathname, mode_t mode)
 {
-    printf("chmod is called: %s\n", pathname);
+    dprintf(debugoutput, "chmod is called: %s\n", pathname);
     if (checkPath(pathname, "chmod") == 1) {
         int (*func)(const char *pathname, mode_t mode);
         func = getOriginFunction("chmod");
@@ -165,7 +180,7 @@ int chmod(const char *pathname, mode_t mode)
 // Haven't test
 int fchmodat(int dirfd, const char *pathname, mode_t mode, int flags)
 {
-    printf("fchmodat is called: %s\n", pathname);
+    dprintf(debugoutput, "fchmodat is called: %s\n", pathname);
     if (checkPath(pathname, "fchmodat")) {
         int (*func)(int dirfd, const char *pathname, mode_t mode, int flags);
         func = getOriginFunction("fchmodat");
@@ -176,7 +191,7 @@ int fchmodat(int dirfd, const char *pathname, mode_t mode, int flags)
 // Haven't test
 int chown(const char *pathname, uid_t owner, gid_t group)
 {
-    printf("chown is called: %s\n", pathname);
+    dprintf(debugoutput, "chown is called: %s\n", pathname);
     if (checkPath(pathname, "chown") == 1) {
         int (*func)(const char *pathname, uid_t owner, gid_t group);
         func = getOriginFunction("chown");
@@ -187,7 +202,7 @@ int chown(const char *pathname, uid_t owner, gid_t group)
 // Haven't test
 int creat(const char *pathname, mode_t mode)
 {
-    printf("creat is called: %s\n", pathname);
+    dprintf(debugoutput, "creat is called: %s\n", pathname);
     if (checkPathCreate(pathname, "creat") == 1) {
         int (*func)(const char *pathname, mode_t mode);
         func = getOriginFunction("creat");
@@ -198,7 +213,7 @@ int creat(const char *pathname, mode_t mode)
 // OK
 FILE *fopen(const char *path, const char *mode)
 {
-    printf("fopen is called: %s\n", path);
+    dprintf(debugoutput, "fopen is called: %s\n", path);
     if (checkPath(path, "fopen") == 1) {
         FILE* (*func)(const char *path, const char *mode);
         func = getOriginFunction("fopen");
@@ -209,7 +224,7 @@ FILE *fopen(const char *path, const char *mode)
 // Haven't test
 int link(const char *oldpath, const char *newpath)
 {
-    printf("link is called: %s, %s\n", oldpath, newpath);    
+    dprintf(debugoutput, "link is called: %s, %s\n", oldpath, newpath);    
     if (checkPath(oldpath, "link") && checkPath(newpath, "link")) {
         int (*func)(const char *oldpath, const char *newpath);
         func = getOriginFunction("link");
@@ -220,7 +235,7 @@ int link(const char *oldpath, const char *newpath)
 // OK
 int mkdir(const char *pathname, mode_t mode)
 {
-    printf("mkdir is called: %s\n", pathname);
+    dprintf(debugoutput, "mkdir is called: %s\n", pathname);
     if (checkPathCreate(pathname, "mkdir") == 1) {
         int (*func)(const char *pathname, mode_t mode);
         func = getOriginFunction("mkdir");
@@ -231,7 +246,7 @@ int mkdir(const char *pathname, mode_t mode)
 // OK
 DIR *opendir(const char *name)
 {
-    printf("opendir is called: %s\n", name);
+    dprintf(debugoutput, "opendir is called: %s\n", name);
     if (checkPath(name, "opendir") == 1) {
         DIR* (*func)(const char *name);
         func = getOriginFunction("opendir");
@@ -242,7 +257,7 @@ DIR *opendir(const char *name)
 // Haven't test
 int open(const char *pathname, int flags, ...)
 {
-    printf("open is called: %s\n", pathname);
+    dprintf(debugoutput, "open is called: %s\n", pathname);
     if (checkPath(pathname, "open") == 1) {
         int (*func)(const char *pathname, int flags, ...);
         func = getOriginFunction("open");
@@ -262,7 +277,7 @@ int open(const char *pathname, int flags, ...)
 // Haven't test
 int openat(int dirfd, const char *pathname, int flags, ...)
 {
-    printf("openat is called: %s\n", pathname);
+    dprintf(debugoutput, "openat is called: %s\n", pathname);
     if (checkPath(pathname, "openat") == 1) {
         int (*func)(int dirfd, const char *pathname, int flags, ...);
         func = getOriginFunction("openat");
@@ -282,7 +297,7 @@ int openat(int dirfd, const char *pathname, int flags, ...)
 // OK
 ssize_t readlink(const char *pathname, char *buf, size_t bufsiz)
 {
-    printf("readlink is called: %s\n", pathname);
+    dprintf(debugoutput, "readlink is called: %s\n", pathname);
     if (checkPath(pathname, "readlink") == 1) {
         int (*func)(const char *pathname, char *buf, size_t bufsiz);
         func = getOriginFunction("readlink");
@@ -293,7 +308,7 @@ ssize_t readlink(const char *pathname, char *buf, size_t bufsiz)
 // Haven't test
 int remove(const char *pathname)
 {
-    printf("remove is called: %s\n", pathname);
+    dprintf(debugoutput, "remove is called: %s\n", pathname);
     if (checkPath(pathname, "remove") == 1) {
         int (*func)(const char *pathname);
         func = getOriginFunction("remove");
@@ -304,7 +319,7 @@ int remove(const char *pathname)
 // OK
 int rename(const char *oldpath, const char *newpath)
 {
-    printf("rename is called: %s, %s\n", oldpath, newpath);
+    dprintf(debugoutput, "rename is called: %s, %s\n", oldpath, newpath);
     char *newpathbechecked;
     if (!isContain(newpath, '/')) newpathbechecked = "./";
     else newpathbechecked = cutPathTail(newpath);
@@ -318,7 +333,7 @@ int rename(const char *oldpath, const char *newpath)
 // Haven't test
 int rmdir(const char *pathname)
 {
-    printf("rmdir is called: %s\n", pathname);
+    dprintf(debugoutput, "rmdir is called: %s\n", pathname);
     if (checkPath(pathname, "rmdir")) {
         int (*func)(const char *pathname);
         func = getOriginFunction("rmdir");
@@ -329,8 +344,8 @@ int rmdir(const char *pathname)
 // OK
 int __xstat(int ver, const char *path, struct stat *buf)
 {
-    printf("__xstat is called: %s\n", path);
-    if (checkPath(path, "__xstat")) {
+    dprintf(debugoutput, "__xstat is called: %s\n", path);
+    if (checkPathCreate(path, "__xstat")) {
         int (*func)(int ver, const char *path, struct stat *buf);
         func = getOriginFunction("__xstat");
         return func(ver, path, buf);
@@ -349,8 +364,8 @@ int __xstat(int ver, const char *path, struct stat *buf)
 
 int __lxstat(int ver, const char *path, struct stat *buf)
 {
-    printf("__lxstat is called: %s\n", path);
-    if (checkPath(path, "__lxstat")) {
+    dprintf(debugoutput, "__lxstat is called: %s\n", path);
+    if (checkPathCreate(path, "__lxstat")) {
         int (*func)(int ver, const char *path, struct stat *buf);
         func = getOriginFunction("__lxstat");
         return func(ver, path, buf);
@@ -360,8 +375,8 @@ int __lxstat(int ver, const char *path, struct stat *buf)
 // Haven't test
 int symlink(const char *target, const char *linkpath)
 {
-    printf("symlink is called: %s, %s\n", target, linkpath);
-    if (checkPath(target, "symlink") && checkPath(linkpath, "symlink")) {
+    dprintf(debugoutput, "symlink is called: %s, %s\n", target, linkpath);
+    if (checkPath(target, "symlink") && checkPathCreate(linkpath, "symlink")) {
         int (*func)(const char *target, const char *linkpath);
         func = getOriginFunction("symlink");
         return func(target, linkpath);
@@ -371,7 +386,7 @@ int symlink(const char *target, const char *linkpath)
 // Haven't test
 int unlink(const char *pathname)
 {
-    printf("unlink is called: %s\n", pathname);
+    dprintf(debugoutput, "unlink is called: %s\n", pathname);
     if (checkPath(pathname, "unlink")) {
         int (*func)(const char *pathname);
         func = getOriginFunction("unlink");
@@ -382,7 +397,7 @@ int unlink(const char *pathname)
 // Haven't test
 int unlinkat(int dirfd, const char *pathname, int flags)
 {
-    printf("unlinkat is called: %s\n", pathname);
+    dprintf(debugoutput, "unlinkat is called: %s\n", pathname);
     if (checkPath(pathname, "unlinkat")) {
         int (*func)(int dirfd, const char *pathname, int flags);
         func = getOriginFunction("unlinkat");
