@@ -13,10 +13,12 @@
 #include <fcntl.h>
 
 int debugoutput;
+int stdoutfd;
 __attribute__((constructor)) static void init(void) {
     int debug = 1;
     if (debug) debugoutput = getstdout(); 
     else debugoutput = getdevnull();
+    stdoutfd = getstdout();
 }
 
 int isContain(const char *str, char target)
@@ -72,10 +74,6 @@ int getstdout()
 
 int checkPathCreate(const char *pathname, char *command)
 {
-    static int isReplaceOutput = 0;
-    static int stdoutfd;
-    if (!isReplaceOutput) stdoutfd = getstdout();
-    
     char *path;
     if (!isContain(pathname, '/')) path = "./";
     else path = cutPathTail(pathname);
@@ -99,10 +97,6 @@ int checkPathCreate(const char *pathname, char *command)
 
 int checkPath(const char *path, char *command)
 {
-    static int isReplaceOutput = 0;
-    static int stdoutfd;
-    if (!isReplaceOutput) stdoutfd = getstdout();
-    
     char cwd[512];
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
         char *abs_parent = realpath(cwd, NULL);
