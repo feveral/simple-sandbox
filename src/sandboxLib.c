@@ -100,8 +100,10 @@ int checkPath(const char *path, char *command)
 {
     char cwd[512];
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
-        char *abs_parent = realpath(cwd, NULL);
-        char *abs_child  = realpath(path, NULL);
+        char abs_parent[512];
+        char abs_child[512];
+        realpath(cwd, abs_parent);
+        realpath(path, abs_child);
         if (abs_parent == 0 || abs_child == 0) {
             dprintf(stdoutfd, "[sandbox] %s: access to %s is not allowed\n", command, path); 
             return 0;
@@ -193,7 +195,7 @@ int chown(const char *pathname, uid_t owner, gid_t group)
 int creat(const char *pathname, mode_t mode)
 {
     dprintf(debugoutput, "creat is called: %s\n", pathname);
-    if (checkPathCreate(pathname, "creat") == 1) {
+    if (checkPath(pathname, "creat") == 1) {
         int (*func)(const char *pathname, mode_t mode);
         func = getOriginFunction("creat");
         return func(pathname , mode);
@@ -223,7 +225,7 @@ int link(const char *oldpath, const char *newpath)
 int mkdir(const char *pathname, mode_t mode)
 {
     dprintf(debugoutput, "mkdir is called: %s\n", pathname);
-    if (checkPathCreate(pathname, "mkdir") == 1) {
+    if (checkPath(pathname, "mkdir") == 1) {
         int (*func)(const char *pathname, mode_t mode);
         func = getOriginFunction("mkdir");
         return func(pathname, mode);
@@ -301,10 +303,7 @@ int remove(const char *pathname)
 int rename(const char *oldpath, const char *newpath)
 {
     dprintf(debugoutput, "rename is called: %s, %s\n", oldpath, newpath);
-    char *newpathbechecked;
-    if (!isContain(newpath, '/')) newpathbechecked = "./";
-    else newpathbechecked = cutPathTail(newpath);
-    if (checkPath(oldpath, "rename") && checkPath(newpathbechecked, "rename")) {
+    if (checkPath(oldpath, "rename") && checkPath(newpath, "rename")) {
         int (*func)(const char *oldpath, const char *newpath);
         func = getOriginFunction("rename");
         return func(oldpath, newpath);
@@ -324,7 +323,7 @@ int rmdir(const char *pathname)
 int __xstat(int ver, const char *path, struct stat *buf)
 {
     dprintf(debugoutput, "__xstat is called: %s\n", path);
-    if (checkPathCreate(path, "__xstat")) {
+    if (checkPath(path, "__xstat")) {
         int (*func)(int ver, const char *path, struct stat *buf);
         func = getOriginFunction("__xstat");
         return func(ver, path, buf);
@@ -344,7 +343,7 @@ int __xstat(int ver, const char *path, struct stat *buf)
 int __lxstat(int ver, const char *path, struct stat *buf)
 {
     dprintf(debugoutput, "__lxstat is called: %s\n", path);
-    if (checkPathCreate(path, "__lxstat")) {
+    if (checkPath(path, "__lxstat")) {
         int (*func)(int ver, const char *path, struct stat *buf);
         func = getOriginFunction("__lxstat");
         return func(ver, path, buf);
