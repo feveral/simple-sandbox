@@ -15,7 +15,7 @@
 int debugoutput;
 int stdoutfd;
 __attribute__((constructor)) static void init(void) {
-    int debug = 1;
+    int debug = 0;
     if (debug) debugoutput = getstdout(); 
     else debugoutput = getdevnull();
     stdoutfd = getstdout();
@@ -30,10 +30,11 @@ int isContain(const char *str, char target)
 
 char *cutPathTail(const char *path)
 {
-    char *cutpath = malloc(sizeof(char) * (strlen(path)) );
+    char *cutpath = malloc(sizeof(char) * (strlen(path)+1) );
+    memset(cutpath, 0, sizeof(cutpath));
     strncpy(cutpath, path, strlen(path));
     for(int i=strlen(cutpath)-1; i>=0;i--){
-        if (cutpath[i] == '/' && i != strlen(cutpath)-1) {
+        if (cutpath[i] == '/') {
             cutpath[i+1] = '\0';
             break;
         }
@@ -149,7 +150,6 @@ int system(const char *command)
     printf("[sandbox] system(%s): not allowed\n", command); return -1;
 }
 
-// Haven't test
 int chdir(const char *path)
 {
     dprintf(debugoutput, "chdir is called: %s\n", path);
@@ -160,7 +160,6 @@ int chdir(const char *path)
     } return -1;
 }
 
-// Haven't test
 int chmod(const char *pathname, mode_t mode)
 {
     dprintf(debugoutput, "chmod is called: %s\n", pathname);
@@ -171,7 +170,6 @@ int chmod(const char *pathname, mode_t mode)
     } return -1;
 }
 
-// Haven't test
 int fchmodat(int dirfd, const char *pathname, mode_t mode, int flags)
 {
     dprintf(debugoutput, "fchmodat is called: %s\n", pathname);
@@ -182,7 +180,6 @@ int fchmodat(int dirfd, const char *pathname, mode_t mode, int flags)
     } return -1;
 }
 
-// Haven't test
 int chown(const char *pathname, uid_t owner, gid_t group)
 {
     dprintf(debugoutput, "chown is called: %s\n", pathname);
@@ -193,7 +190,6 @@ int chown(const char *pathname, uid_t owner, gid_t group)
     } return -1;
 }
 
-// Haven't test
 int creat(const char *pathname, mode_t mode)
 {
     dprintf(debugoutput, "creat is called: %s\n", pathname);
@@ -204,7 +200,6 @@ int creat(const char *pathname, mode_t mode)
     } return -1;
 }
 
-// OK
 FILE *fopen(const char *path, const char *mode)
 {
     dprintf(debugoutput, "fopen is called: %s\n", path);
@@ -215,7 +210,6 @@ FILE *fopen(const char *path, const char *mode)
     } return 0;
 }
 
-// Haven't test
 int link(const char *oldpath, const char *newpath)
 {
     dprintf(debugoutput, "link is called: %s, %s\n", oldpath, newpath);    
@@ -226,7 +220,6 @@ int link(const char *oldpath, const char *newpath)
     } return -1;
 }
 
-// OK
 int mkdir(const char *pathname, mode_t mode)
 {
     dprintf(debugoutput, "mkdir is called: %s\n", pathname);
@@ -237,7 +230,6 @@ int mkdir(const char *pathname, mode_t mode)
     } return 0;
 }
 
-// OK
 DIR *opendir(const char *name)
 {
     dprintf(debugoutput, "opendir is called: %s\n", name);
@@ -248,7 +240,6 @@ DIR *opendir(const char *name)
     } return 0;
 }
 
-// Haven't test
 int open(const char *pathname, int flags, ...)
 {
     dprintf(debugoutput, "open is called: %s\n", pathname);
@@ -268,7 +259,6 @@ int open(const char *pathname, int flags, ...)
     } return -1;
 }
 
-// Haven't test
 int openat(int dirfd, const char *pathname, int flags, ...)
 {
     dprintf(debugoutput, "openat is called: %s\n", pathname);
@@ -288,7 +278,6 @@ int openat(int dirfd, const char *pathname, int flags, ...)
     } return -1;
 }
 
-// OK
 ssize_t readlink(const char *pathname, char *buf, size_t bufsiz)
 {
     dprintf(debugoutput, "readlink is called: %s\n", pathname);
@@ -299,7 +288,6 @@ ssize_t readlink(const char *pathname, char *buf, size_t bufsiz)
     } return -1;
 }
 
-// Haven't test
 int remove(const char *pathname)
 {
     dprintf(debugoutput, "remove is called: %s\n", pathname);
@@ -310,7 +298,6 @@ int remove(const char *pathname)
     } return -1;
 }
 
-// OK
 int rename(const char *oldpath, const char *newpath)
 {
     dprintf(debugoutput, "rename is called: %s, %s\n", oldpath, newpath);
@@ -324,7 +311,6 @@ int rename(const char *oldpath, const char *newpath)
     } return -1;
 }
 
-// Haven't test
 int rmdir(const char *pathname)
 {
     dprintf(debugoutput, "rmdir is called: %s\n", pathname);
@@ -335,7 +321,6 @@ int rmdir(const char *pathname)
     } return -1;
 }
 
-// OK
 int __xstat(int ver, const char *path, struct stat *buf)
 {
     dprintf(debugoutput, "__xstat is called: %s\n", path);
@@ -366,7 +351,6 @@ int __lxstat(int ver, const char *path, struct stat *buf)
     } return -1;
 }
 
-// Haven't test
 int symlink(const char *target, const char *linkpath)
 {
     dprintf(debugoutput, "symlink is called: %s, %s\n", target, linkpath);

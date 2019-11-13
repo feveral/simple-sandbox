@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
             sandboxLibPath = argv[optind];
             flag += 1;
         } else {
-            printf("./sandbox: invalid option -- '%c'\n", argv[optind-1][1]);
+            printf("%s: invalid option -- '%c'\n", argv[0], argv[optind-1][1]);
             printString("usage: ./sandbox [-p sopath] [-d basedir] [--] cmd [cmd args ...]");
             printString("-p: set the path to sandbox.so, default = ./sandbox.so");
             printString("-d: restrict directory, default = .");
@@ -37,7 +37,12 @@ int main(int argc, char *argv[])
         command = concat(oldCommand, " ");
     }
 
-    char *ldPreload = concat("LD_PRELOAD=", realpath(sandboxLibPath,  NULL));
+    char *realSandboxLibPath = realpath(sandboxLibPath,  NULL);
+    if (!realSandboxLibPath) {
+        printf("%s not found.\n", sandboxLibPath);
+        exit(-1);
+    }
+    char *ldPreload = concat("LD_PRELOAD=", realSandboxLibPath);
     ldPreload = concat(ldPreload, " ");
     chdir(basePath);
     system(concat(ldPreload, command));
